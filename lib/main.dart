@@ -12,7 +12,6 @@ class _DoomFire extends StatefulWidget {
 
 class _DoomFireState extends State<_DoomFire>
     with SingleTickerProviderStateMixin {
-  final _fire = Fire();
   late Animation<num> _animation;
   late AnimationController _animationController;
 
@@ -33,23 +32,48 @@ class _DoomFireState extends State<_DoomFire>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return _AnimatedFire(animation: _animation, fire: _fire);
-  }
+  Widget build(BuildContext context) => _AnimatedFire(animation: _animation);
 }
 
 class _AnimatedFire extends AnimatedWidget {
-  _AnimatedFire(
-      {Key? key, required Animation<num> animation, required Fire fire})
-      : _fire = fire,
-        super(key: key, listenable: animation);
+  _AnimatedFire({Key? key, required Animation<num> animation})
+      : super(key: key, listenable: animation);
 
-  final Fire _fire;
+  Widget build(BuildContext context) => _FireContainer();
+}
 
+class _FireContainer extends StatefulWidget {
+  @override
+  _FireContainerState createState() => _FireContainerState();
+}
+
+class _FireContainerState extends State<_FireContainer> {
+  final _fire = Fire();
+
+  /// Local position of the drag (if any).
+  Offset? _dragStart;
+
+  void _onHorizontalDragStart(DragStartDetails details) =>
+      _dragStart = details.localPosition;
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    final offsetFromDragStart = details.localPosition - _dragStart!;
+    final normalizedOffset = offsetFromDragStart.dx * _dragOffsetToWindScale;
+    setState(() => _fire.wind = normalizedOffset.round());
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails _) => _dragStart = null;
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      child: CustomPaint(
-        painter: _FirePainter(_fire),
+      child: GestureDetector(
+        onHorizontalDragStart: _onHorizontalDragStart,
+        onHorizontalDragUpdate: _onHorizontalDragUpdate,
+        onHorizontalDragEnd: _onHorizontalDragEnd,
+        child: CustomPaint(
+          painter: _FirePainter(_fire),
+        ),
       ),
       constraints: BoxConstraints(
         minWidth: double.infinity,
@@ -59,6 +83,7 @@ class _AnimatedFire extends AnimatedWidget {
   }
 }
 
+const _dragOffsetToWindScale = 1 / 100;
 const _pixelSize = 5.0;
 
 class _FirePainter extends CustomPainter {

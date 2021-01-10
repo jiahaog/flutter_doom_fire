@@ -11,6 +11,11 @@ class Fire {
   int? width;
   int? height;
 
+  /// Direction and strength of the wind.
+  ///
+  /// Positive values indicates the left to right direction.
+  int wind = 0;
+
   /// Updates the dimensions of the fire.
   void setSize({required int width, required int height}) {
     // Don't clear the state if the width and height remains unchanged. This
@@ -41,8 +46,14 @@ class Fire {
   }
 
   void _spreadFire(int fromX, int fromY) {
-    final x = max(0, min(width! - 1, fromX - _random.nextInt(2)));
+    final x = max(0, min(width! - 1, fromX + _windOffset));
     _firePixels[fromY - 1][x] = max(0, _firePixels[fromY][fromX] - _smaller);
+  }
+
+  int get _windOffset {
+    // Plus one because [nextInt] is exclusive.
+    final offset = _random.nextInt(wind.abs() + 1);
+    return (wind > 0 ? 1 : -1) * offset;
   }
 
   int get _smaller => _random.nextInt(4);
