@@ -64,6 +64,15 @@ class _FireContainerState extends State<_FireContainer> {
 
   void _onHorizontalDragEnd(DragEndDetails _) => _dragStart = null;
 
+  void _onTapDown(TapDownDetails details) {
+    final x = (details.localPosition.dx / _pixelSize).round();
+    final y = (details.localPosition.dy / _pixelSize).round();
+
+    setState(() => _fire.addSource(x: x, y: y));
+  }
+
+  void _onDoubleTap() => setState(() => _fire.clearAddedSources());
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -71,6 +80,8 @@ class _FireContainerState extends State<_FireContainer> {
         onHorizontalDragStart: _onHorizontalDragStart,
         onHorizontalDragUpdate: _onHorizontalDragUpdate,
         onHorizontalDragEnd: _onHorizontalDragEnd,
+        onTapDown: _onTapDown,
+        onDoubleTap: _onDoubleTap,
         child: CustomPaint(
           painter: _FirePainter(_fire),
         ),

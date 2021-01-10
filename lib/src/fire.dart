@@ -3,6 +3,9 @@ import 'dart:ui';
 
 import 'palette.dart';
 
+get _fireColor => palette.length - 1;
+const _noFireColor = 0;
+
 /// Algorithm for the fire.
 class Fire {
   List<List<int>> _firePixels = [];
@@ -10,6 +13,9 @@ class Fire {
 
   int? width;
   int? height;
+
+  final Set<_Coordinate> _temporarySources = <_Coordinate>{};
+  final Set<_Coordinate> _permanentSources = <_Coordinate>{};
 
   /// Direction and strength of the wind.
   ///
@@ -31,23 +37,47 @@ class Fire {
       for (var y = 0; y < height; y += 1)
         [
           for (var x = 0; x < width; x += 1)
-            if (y == height - 1) palette.length - 1 else 0
+            if (y == height - 1) _fireColor else _noFireColor
         ]
     ];
+
+    _permanentSources.clear();
+    for (var x = 0; x < width; x += 1) {
+      _permanentSources.add(_Coordinate(x, height - 1));
+    }
   }
 
   /// Propagates the fire.
   void doFire() {
     for (var y = 1; y < height!; y += 1) {
       for (var x = 0; x < width!; x += 1) {
-        _spreadFire(x, y);
+        _spreadFire(_Coordinate(x, y));
       }
     }
   }
 
-  void _spreadFire(int fromX, int fromY) {
-    final x = max(0, min(width! - 1, fromX + _windOffset));
-    _firePixels[fromY - 1][x] = max(0, _firePixels[fromY][fromX] - _smaller);
+  /// Adds a temporary source of fire.
+  ///
+  /// Can be cleared with [clearAddedSources].
+  void addSource({required int x, required int y}) {
+    _temporarySources.add(_Coordinate(x, y));
+    _temporarySources.add(_Coordinate(x + 1, y));
+    _temporarySources.add(_Coordinate(x, y + 1));
+    _temporarySources.add(_Coordinate(x - 1, y));
+    _temporarySources.add(_Coordinate(x, y - 1));
+  }
+
+  /// Clears all fire sources from [addSource].
+  void clearAddedSources() => _temporarySources.clear();
+
+  void _spreadFire(_Coordinate from) {
+    final fromFire =
+        _temporarySources.contains(from) || _permanentSources.contains(from)
+            ? palette.length - 1
+            : _firePixels[from.y][from.x];
+
+    final x = max(0, min(width! - 1, from.x + _windOffset));
+    _firePixels[from.y - 1][x] = max(0, fromFire - _smaller);
   }
 
   int get _windOffset {
@@ -62,4 +92,23 @@ class Fire {
   ///
   /// [x] and [y] should fall within the bounds set by [setSize].
   Color colorAt({required int x, required int y}) => palette[_firePixels[y][x]];
+}
+
+class _Coordinate {
+  final int x;
+  final int y;
+
+  _Coordinate(this.x, this.y);
+
+  @override
+  bool operator ==(Object other) {
+    return other is _Coordinate && other.x == x && other.y == y;
+  }
+
+  // Common hash function.
+  @override
+  int get hashCode => x * 31 + y;
+
+  @override
+  String toString() => 'Coordinate(x=$x, y=$y)';
 }
