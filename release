@@ -1,0 +1,16 @@
+# !/usr/bin/env bash
+
+set -euo pipefail
+
+flutter_sdk=third_party/flutter
+flutter_version="$(cat ./.flutter_version)"
+
+# In case the repo already exists, it's alright to skip the clone.
+git clone https://github.com/flutter/flutter.git "$flutter_sdk" || true
+
+pushd "$flutter_sdk"
+git fetch
+git checkout "$flutter_version"
+popd
+
+"$flutter_sdk/bin/flutter" build web --release

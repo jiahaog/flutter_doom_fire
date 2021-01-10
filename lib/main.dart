@@ -1,9 +1,28 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'src/fire.dart';
 
-void main() => runApp(_DoomFire());
+import 'src/fire.dart';
+import 'src/palette.dart';
+
+void main() {
+  // Performance is not good on web, so make the widget smaller.
+  final app = kIsWeb
+      ? Container(
+        color: palette.first,
+          child: Center(
+            child: Container(
+              width: 300,
+              height: 300,
+              child: _DoomFire(),
+            ),
+          ),
+        )
+      : _DoomFire();
+
+  runApp(app);
+}
 
 class _DoomFire extends StatefulWidget {
   @override
@@ -85,10 +104,6 @@ class _FireContainerState extends State<_FireContainer> {
         child: CustomPaint(
           painter: _FirePainter(_fire),
         ),
-      ),
-      constraints: BoxConstraints(
-        minWidth: double.infinity,
-        minHeight: double.infinity,
       ),
     );
   }
